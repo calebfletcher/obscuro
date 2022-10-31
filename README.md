@@ -13,3 +13,8 @@ be configured and controlled, with new values fed in from the user's simulator.
 
 ## Software API
 A Rust library provides an interface to submit sensor data to the FPGA.
+
+## Repository Structure
+- [hardware](hardware/) - PCB Designs and Interface Documentation
+- [firmware](firmware/) - FPGA VHDL
+- [software](software/) - Rust Library and GUI
