@@ -1,0 +1,4 @@
+build/
+
+targets/*/images
+targets/*/build.info
