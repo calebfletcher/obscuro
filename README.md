@@ -18,3 +18,32 @@ A Rust library provides an interface to submit sensor data to the FPGA.
 - [hardware](hardware/) - PCB Designs and Interface Documentation
 - [firmware](firmware/) - FPGA VHDL
 - [software](software/) - Rust Library and GUI
+
+## Architecture
+
+```mermaid
+flowchart LR;
+    subgraph FPGA
+        subgraph interfaces
+            direction RL
+            onewire[OneWire Slave]
+            spi[SPI Slave]
+            i2c[I2C Slave]
+        end
+        ram[RAM] --- ts_buffer
+        
+        onewire --- ram
+        spi --- ram
+        i2c --- ram
+
+        ts_buffer[Time\nSynchroniser]
+    end
+    
+    subgraph PC
+        direction LR
+        backend[Backend] --- gui
+        gui[GUI]
+    end
+
+    ts_buffer -- UDP --- backend
+```
