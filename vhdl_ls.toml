@@ -1,0 +1,16 @@
+[libraries]
+xil_defaultlib.files = [
+  'firmware/targets/*/*/*.vhd',
+  'firmware/common/rtl/*.vhd',
+]
+
+# Libraries can be marked as third-party to disable some analysis warnings, such as unused declarations
+UNISIM.files = [
+  '/opt/Xilinx/Vivado/2023.2/data/vhdl/src/unisims/unisim_VCOMP.vhd',
+]
+UNISIM.is_third_party = true
+
+xpm.files = [
+    '/opt/Xilinx/Vivado/2023.2/data/ip/xpm/xpm_VCOMP.vhd'
+]
+xpm.is_third_party = true
