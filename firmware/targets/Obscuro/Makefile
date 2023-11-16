@@ -10,7 +10,9 @@ export PRJ_PART = XC7A35TICSG324-1L
 # Define the TOP_DIR path
 export TOP_DIR = $(abspath $(PWD)/../..)
 
+ifndef VIVADO_PROJECT_SIM
 export VIVADO_PROJECT_SIM = ObscuroTb
+endif
 
 # Use top level makefile
 include $(TOP_DIR)/submodules/ruckus/system_vivado.mk
