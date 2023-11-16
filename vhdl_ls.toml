@@ -1,7 +1,7 @@
 [libraries]
 xil_defaultlib.files = [
   'firmware/targets/*/*/*.vhd',
-  'firmware/common/rtl/*.vhd',
+#  'firmware/common/rtl/*.vhd',
 ]
 
 # Libraries can be marked as third-party to disable some analysis warnings, such as unused declarations

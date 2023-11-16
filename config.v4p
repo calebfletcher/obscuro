@@ -1,0 +1,12 @@
+[libraries]
+firmware/targets/*/*/*.vhd = "xil_defaultlib"
+/opt/Xilinx/Vivado/2023.2/data/ip/xpm/xpm_VCOMP.vhd = "xpm"
+/opt/Xilinx/Vivado/2023.2/data/vhdl/src/unisims/unisim_VCOMP.vhd = "UNISIM"
+
+[excludes]
+**/out/*.vhd = true
+bin/** = true
+
+[settings]
+V4p.Settings.Formatting.Indentation.TabWidth = 4
+V4p.Settings.Formatting.Indentation.UseTabs = false 
