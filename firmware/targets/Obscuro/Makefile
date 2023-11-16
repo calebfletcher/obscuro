@@ -15,5 +15,12 @@ export VIVADO_PROJECT_SIM = ObscuroTb
 # Use top level makefile
 include $(TOP_DIR)/submodules/ruckus/system_vivado.mk
 
-sim_replay:
+.PHONY : xsim_replay
+xsim_replay:
+	$(call ACTION_HEADER,"Vivado XSIM Replay")
 	@cd $(OUT_DIR); xsim --gui $(VIVADO_PROJECT).sim/sim_1/behav/xsim/$(VIVADO_PROJECT_SIM)_behav.wdb
+
+.PHONY : xsim_gui
+xsim_gui : $(SOURCE_DEPEND)
+	$(call ACTION_HEADER,"Vivado XSIM GUI Simulation")
+	@cd $(OUT_DIR); vivado -source $(RUCKUS_DIR)/vivado/xsim.tcl
