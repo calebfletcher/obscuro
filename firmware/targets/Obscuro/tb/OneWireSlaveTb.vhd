@@ -9,18 +9,19 @@ entity OneWireSlaveTb is
 end entity;
 
 architecture test of OneWireSlaveTb is
-    signal CLK100MHZ : STD_LOGIC := '1';
-    signal data      : STD_LOGIC;
+    -- 100KHz/10us clock
+    signal clk  : STD_LOGIC := '1';
+    signal data : STD_LOGIC;
 begin
     -- Instantiate DUT
     dut: entity work.OneWireSlave
         port map (
-            CLK100MHZ => CLK100MHZ,
-            data      => data
+            clk  => clk,
+            data => data
         );
 
-    CLK100MHZ <= not CLK100MHZ after 5 us;
-    data      <= 'H'; -- weak pullup
+    clk  <= not clk after 5 us;
+    data <= 'H'; -- weak pullup
 
     -- Generate the test stimulus
 

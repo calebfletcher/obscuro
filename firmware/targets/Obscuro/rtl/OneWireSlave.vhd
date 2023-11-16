@@ -5,19 +5,19 @@ library IEEE;
 
 entity OneWireSlave is
     port (
-        CLK100MHZ : in    STD_LOGIC;
-        data      : inout STD_LOGIC
+        -- 100KHz/10us clock
+        clk  : in    STD_LOGIC;
+        data : inout STD_LOGIC
     );
 end entity;
 
 architecture Behavioural of OneWireSlave is
-    --signal counter : STD_LOGIC_VECTOR(3 downto 0);
 begin
     data <= 'Z';
 
-    process (CLK100MHZ)
+    process (clk)
     begin
-        if rising_edge(CLK100MHZ) then
+        if rising_edge(clk) then
             if data = '0' or data = 'L' then
                 report "detected low";
 
