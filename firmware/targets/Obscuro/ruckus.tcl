@@ -6,8 +6,8 @@ loadRuckusTcl $::env(TOP_DIR)/submodules/surf
 loadRuckusTcl $::env(TOP_DIR)/common
 
 # Load local source Code and constraints
-loadSource      -dir "$::DIR_PATH/rtl"
+loadSource      -dir "$::DIR_PATH/rtl" -fileType {VHDL 2008}
 loadConstraints -dir "$::DIR_PATH/rtl"
 
 # Load local SIM source Code
-loadSource -sim_only -dir "$::DIR_PATH/tb"
+loadSource -sim_only -dir "$::DIR_PATH/tb" -fileType {VHDL 2008}
