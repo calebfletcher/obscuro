@@ -15,7 +15,7 @@ entity OneWireSlave is
 end entity;
 
 architecture Behavioural of OneWireSlave is
-    type state_type is (WAIT_FOR_RESET, WAIT_FOR_PRESENCE, PRESENCE, WAIT_FOR_COMMAND);
+    type state_type is (WAIT_FOR_RESET, WAIT_FOR_RESET_RELEASE, WAIT_FOR_PRESENCE, PRESENCE, WAIT_FOR_COMMAND);
     signal pr_state : state_type := WAIT_FOR_RESET;
     signal nx_state : state_type;
 
@@ -40,7 +40,16 @@ begin
             when WAIT_FOR_RESET =>
                 if not data then
                     -- Detected start of a reset pulse
+                    nx_state <= WAIT_FOR_RESET_RELEASE;
+                else
+                    nx_state <= WAIT_FOR_RESET;
+                end if;
+            when WAIT_FOR_RESET_RELEASE =>
+                if data then
+                    -- Detected end of a reset pulse
                     nx_state <= WAIT_FOR_PRESENCE;
+                else
+                    nx_state <= WAIT_FOR_RESET_RELEASE;
                 end if;
             when WAIT_FOR_PRESENCE =>
                 if timer = timer_max then
@@ -74,6 +83,8 @@ begin
                 timer_max <= 10;
                 -- wait for tPDL (60us-240us)
             when others =>
+                -- TODO: Minimum reset pulse duration check?
+                -- TODO: set a timeout for waiting for command?
                 timer_max <= 0;
         end case;
 
