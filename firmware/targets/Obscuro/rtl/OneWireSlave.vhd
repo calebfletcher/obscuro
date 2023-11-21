@@ -54,11 +54,17 @@ begin
             when WAIT_FOR_PRESENCE =>
                 if timer = timer_max then
                     nx_state <= PRESENCE;
+                else
+                    nx_state <= WAIT_FOR_PRESENCE;
                 end if;
             when PRESENCE =>
-                nx_state <= WAIT_FOR_COMMAND;
-                -- TODO: set a timeout?
+                if timer = timer_max then
+                    nx_state <= WAIT_FOR_COMMAND;
+                else
+                    nx_state <= PRESENCE;
+                end if;
             when WAIT_FOR_COMMAND =>
+                nx_state <= WAIT_FOR_COMMAND;
         end case;
     end process;
 
