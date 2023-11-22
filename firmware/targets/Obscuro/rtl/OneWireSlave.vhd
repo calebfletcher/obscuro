@@ -5,10 +5,9 @@ library IEEE;
 
 entity OneWireSlave is
     generic (
-        F_CLK_KHZ : natural := 100
+        F_CLK_MHZ : positive := 1
     );
     port (
-        -- 100KHz/10us clock
         clk  : in    STD_LOGIC;
         data : inout STD_LOGIC
     );
@@ -111,17 +110,17 @@ begin
         case pr_state is
             when WAIT_FOR_PRESENCE =>
                 -- wait for tPDH (15us-60us)
-                timer_max <= 3;
+                timer_max <= 30 * F_CLK_MHZ;
             when PRESENCE =>
                 -- wait for tPDL (60us-240us)
-                timer_max <= 10;
+                timer_max <= 100 * F_CLK_MHZ;
             when DATA_WAIT_FOR_SAMPLE_TIME =>
                 -- wait for between tW0Lmin and tW1Lmax (15us-60us)
-                timer_max <= 4;
+                timer_max <= 30 * F_CLK_MHZ;
             when others =>
                 -- TODO: Minimum reset pulse duration check?
                 -- TODO: set a timeout for waiting for command?
-                timer_max <= 0;
+                timer_max <= 0 * F_CLK_MHZ;
         end case;
 
         if rising_edge(clk) then

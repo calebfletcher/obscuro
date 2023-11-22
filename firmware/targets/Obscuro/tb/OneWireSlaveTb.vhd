@@ -58,7 +58,7 @@ begin
             data => data
         );
 
-    clk  <= not clk after 5 us;
+    clk  <= not clk after 500 ns;
     data <= 'H'; -- weak pullup
 
     -- Generate the test stimulus
