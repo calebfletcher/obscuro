@@ -15,12 +15,19 @@ entity OneWireSlave is
 end entity;
 
 architecture Behavioural of OneWireSlave is
-    type state_type is (WAIT_FOR_RESET, WAIT_FOR_RESET_RELEASE, WAIT_FOR_PRESENCE, PRESENCE, WAIT_FOR_COMMAND);
+    type state_type is (
+            WAIT_FOR_RESET, WAIT_FOR_RESET_RELEASE,
+            WAIT_FOR_PRESENCE, PRESENCE,
+            DATA_WAIT_FOR_FALL, DATA_WAIT_FOR_SAMPLE_TIME, DATA_WAIT_FOR_REMAINING_WINDOW
+        );
     signal pr_state : state_type := WAIT_FOR_RESET;
     signal nx_state : state_type;
 
     signal timer     : natural := 0;
     signal timer_max : natural := 0;
+
+    signal bits_read : natural range 0 to 7         := 0;
+    signal rx_byte   : std_logic_vector(7 downto 0) := "00000000";
 
     -- family is 0x28
     --constant ID : std_logic_vector := x"E800000B1FCD1028";
@@ -59,23 +66,43 @@ begin
                 end if;
             when PRESENCE =>
                 if timer = timer_max then
-                    nx_state <= WAIT_FOR_COMMAND;
+                    nx_state <= DATA_WAIT_FOR_FALL;
                 else
                     nx_state <= PRESENCE;
                 end if;
-            when WAIT_FOR_COMMAND =>
-                nx_state <= WAIT_FOR_COMMAND;
+            when DATA_WAIT_FOR_FALL =>
+                if not data then
+                    nx_state <= DATA_WAIT_FOR_SAMPLE_TIME;
+                else
+                    nx_state <= DATA_WAIT_FOR_FALL;
+                end if;
+            when DATA_WAIT_FOR_SAMPLE_TIME =>
+                if timer = timer_max then
+                    nx_state <= DATA_WAIT_FOR_REMAINING_WINDOW;
+                else
+                    nx_state <= DATA_WAIT_FOR_SAMPLE_TIME;
+                end if;
+            when DATA_WAIT_FOR_REMAINING_WINDOW =>
+                if data then
+                    nx_state <= DATA_WAIT_FOR_FALL;
+                else
+                    nx_state <= DATA_WAIT_FOR_REMAINING_WINDOW;
+                end if;
         end case;
     end process;
 
     -- Logic for output
     process (all)
     begin
-        if pr_state = PRESENCE then
+        case pr_state is
+            when PRESENCE =>
             data <= '0';
-        else
+            when DATA_WAIT_FOR_SAMPLE_TIME | DATA_WAIT_FOR_REMAINING_WINDOW =>
+                -- data <= bit that should be written; 
+                data <= 'Z';
+            when others =>
             data <= 'Z';
-        end if;
+        end case;
     end process;
 
     -- Timer
@@ -86,8 +113,11 @@ begin
                 -- wait for tPDH (15us-60us)
                 timer_max <= 3;
             when PRESENCE =>
-                timer_max <= 10;
                 -- wait for tPDL (60us-240us)
+                timer_max <= 10;
+            when DATA_WAIT_FOR_SAMPLE_TIME =>
+                -- wait for between tW0Lmin and tW1Lmax (15us-60us)
+                timer_max <= 4;
             when others =>
                 -- TODO: Minimum reset pulse duration check?
                 -- TODO: set a timeout for waiting for command?

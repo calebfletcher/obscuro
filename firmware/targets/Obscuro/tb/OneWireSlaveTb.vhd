@@ -84,8 +84,16 @@ begin
         wait for (master_release_time + 480 us) - now;
 
         -- Can start data communications now
+        write_bit(data, true);
         read_bit(data, rx_value);
-        report "got value " & to_string(rx_value);
+        read_bit(data, rx_value);
+        write_bit(data, false);
+        write_bit(data, true);
+        read_bit(data, rx_value);
+        write_bit(data, true);
+        read_bit(data, rx_value);
+        write_bit(data, false);
+        read_bit(data, rx_value);
         -- Testing complete
         report "##### TESTBENCH COMPLETE #####";
         finish;
