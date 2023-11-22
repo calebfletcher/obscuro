@@ -8,8 +8,9 @@ entity OneWireSlave is
         F_CLK_MHZ : positive := 1
     );
     port (
-        clk  : in    STD_LOGIC;
-        data : inout STD_LOGIC
+        clk      : in  STD_LOGIC;
+        data_in  : in  STD_LOGIC;
+        data_out : out STD_LOGIC
     );
 end entity;
 
@@ -45,14 +46,14 @@ begin
     begin
         case pr_state is
             when WAIT_FOR_RESET =>
-                if not data then
+                if not data_in then
                     -- Detected start of a reset pulse
                     nx_state <= WAIT_FOR_RESET_RELEASE;
                 else
                     nx_state <= WAIT_FOR_RESET;
                 end if;
             when WAIT_FOR_RESET_RELEASE =>
-                if data then
+                if data_in then
                     -- Detected end of a reset pulse
                     nx_state <= WAIT_FOR_PRESENCE;
                 else
@@ -71,7 +72,7 @@ begin
                     nx_state <= PRESENCE;
                 end if;
             when DATA_WAIT_FOR_FALL =>
-                if not data then
+                if not data_in then
                     nx_state <= DATA_WAIT_FOR_SAMPLE_TIME;
                 else
                     nx_state <= DATA_WAIT_FOR_FALL;
@@ -85,7 +86,7 @@ begin
             when SAMPLE =>
                 nx_state <= DATA_WAIT_FOR_REMAINING_WINDOW;
             when DATA_WAIT_FOR_REMAINING_WINDOW =>
-                if data then
+                if data_in then
                     nx_state <= DATA_WAIT_FOR_FALL;
                 else
                     nx_state <= DATA_WAIT_FOR_REMAINING_WINDOW;
@@ -98,12 +99,12 @@ begin
     begin
         case pr_state is
             when PRESENCE =>
-            data <= '0';
+                data_out <= '0';
             when DATA_WAIT_FOR_SAMPLE_TIME | DATA_WAIT_FOR_REMAINING_WINDOW =>
                 -- data <= bit that should be written; 
-                data <= 'Z';
+                data_out <= 'Z';
             when others =>
-            data <= 'Z';
+                data_out <= 'Z';
         end case;
     end process;
 

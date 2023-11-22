@@ -12,6 +12,8 @@ architecture test of OneWireSlaveTb is
     -- 100KHz/10us clock
     signal clk                 : STD_LOGIC := '1';
     signal data                : STD_LOGIC;
+    signal data_in             : STD_LOGIC;
+    signal data_out            : STD_LOGIC;
     signal master_release_time : delay_length;
     signal rx_value            : std_logic;
 
@@ -34,19 +36,19 @@ architecture test of OneWireSlaveTb is
         wait for (80 us + slot_start) - now;
     end procedure;
 
-    procedure read_bit(signal data : inout std_logic; signal value : out std_logic) is
+    procedure read_bit(signal data_in : out std_logic; signal data_out : in std_logic; signal value : out std_logic) is
         variable slot_start : delay_length;
     begin
         slot_start := now;
         -- pull low
-        data <= '0';
+        data_in <= '0';
         -- wait tRL
         wait for 5 us;
         -- release
-        data <= 'Z';
+        data_in <= 'Z';
         -- wait for tMSR after slot start
         wait for 10 us;
-        value <= data;
+        value <= data_out;
         -- wait for remaining tslot
         wait for (80 us + slot_start) - now;
     end procedure;
@@ -54,12 +56,15 @@ begin
     -- Instantiate DUT
     dut: entity work.OneWireSlave
         port map (
-            clk  => clk,
-            data => data
+            clk      => clk,
+            data_in  => data_in,
+            data_out => data_out
         );
 
-    clk  <= not clk after 500 ns;
-    data <= 'H'; -- weak pullup
+    clk      <= not clk after 500 ns;
+    data_in  <= 'H'; -- weak pullup
+    data_out <= 'H'; -- weak pullup
+    data     <= data_in and data_out;
 
     -- Generate the test stimulus
 
@@ -67,15 +72,15 @@ begin
     begin
         wait for 20 us;
         -- reset pulse  tRSTL (480us to 640us)
-        data <= '0';
+        data_in <= '0';
         wait for 480 us;
-        data <= 'Z';
+        data_in <= 'Z';
         master_release_time <= now;
 
         -- wait for tMSP (min 68us max 75us)
         wait for 70 us;
         -- check for presence
-        if data = '1' or data = 'H' then
+        if data_out = 'H' then
             -- slave not found
             report "slave not found" severity failure;
         end if;
@@ -84,16 +89,16 @@ begin
         wait for (master_release_time + 480 us) - now;
 
         -- Can start data communications now
-        write_bit(data, true);
-        read_bit(data, rx_value);
-        read_bit(data, rx_value);
-        write_bit(data, false);
-        write_bit(data, true);
-        read_bit(data, rx_value);
-        write_bit(data, true);
-        read_bit(data, rx_value);
-        write_bit(data, false);
-        read_bit(data, rx_value);
+        write_bit(data_in, true);
+        read_bit(data_in, data_out, rx_value);
+        read_bit(data_in, data_out, rx_value);
+        write_bit(data_in, false);
+        write_bit(data_in, true);
+        read_bit(data_in, data_out, rx_value);
+        write_bit(data_in, true);
+        read_bit(data_in, data_out, rx_value);
+        write_bit(data_in, false);
+        read_bit(data_in, data_out, rx_value);
         -- Testing complete
         report "##### TESTBENCH COMPLETE #####";
         finish;
