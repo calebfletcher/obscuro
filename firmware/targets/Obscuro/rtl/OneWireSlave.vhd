@@ -17,7 +17,8 @@ architecture Behavioural of OneWireSlave is
     type state_type is (
             WAIT_FOR_RESET, WAIT_FOR_RESET_RELEASE,
             WAIT_FOR_PRESENCE, PRESENCE,
-            DATA_WAIT_FOR_FALL, DATA_WAIT_FOR_SAMPLE_TIME, DATA_WAIT_FOR_REMAINING_WINDOW
+            DATA_WAIT_FOR_FALL, DATA_WAIT_FOR_SAMPLE_TIME,
+            SAMPLE, DATA_WAIT_FOR_REMAINING_WINDOW,
         );
     signal pr_state : state_type := WAIT_FOR_RESET;
     signal nx_state : state_type;
@@ -77,10 +78,12 @@ begin
                 end if;
             when DATA_WAIT_FOR_SAMPLE_TIME =>
                 if timer = timer_max then
-                    nx_state <= DATA_WAIT_FOR_REMAINING_WINDOW;
+                    nx_state <= SAMPLE;
                 else
                     nx_state <= DATA_WAIT_FOR_SAMPLE_TIME;
                 end if;
+            when SAMPLE =>
+                nx_state <= DATA_WAIT_FOR_REMAINING_WINDOW;
             when DATA_WAIT_FOR_REMAINING_WINDOW =>
                 if data then
                     nx_state <= DATA_WAIT_FOR_FALL;
