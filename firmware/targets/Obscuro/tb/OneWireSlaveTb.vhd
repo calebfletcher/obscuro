@@ -10,14 +10,26 @@ end entity;
 
 architecture test of OneWireSlaveTb is
     -- 100KHz/10us clock
-    signal clk                 : STD_LOGIC := '1';
-    signal data                : STD_LOGIC;
-    signal data_in             : STD_LOGIC;
-    signal data_out            : STD_LOGIC;
+    signal clk      : STD_LOGIC := '1';
+    signal data     : STD_LOGIC;
+    signal data_in  : STD_LOGIC;
+    signal data_out : STD_LOGIC;
+
+    signal rd_data  : bit_vector(7 downto 0);
+    signal rd_valid : boolean;
+    signal rd_ready : boolean;
+    signal wr_data  : bit_vector(7 downto 0);
+    signal wr_valid : boolean;
+
     signal master_release_time : delay_length;
     signal rx_value            : std_logic;
 
-    procedure write_bit(signal data : out std_logic; constant value : in boolean) is
+    type stimulus_type is array (0 to 3) of bit_vector(7 downto 0);
+    constant STIMULUS : stimulus_type := (
+        x"AD", x"5F", x"07", x"92"
+    );
+
+    procedure write_bit(signal data : out std_logic; constant value : in bit) is
         variable slot_start : delay_length;
     begin
         slot_start := now;
@@ -52,13 +64,25 @@ architecture test of OneWireSlaveTb is
         -- wait for remaining tslot
         wait for (80 us + slot_start) - now;
     end procedure;
+
+    procedure write_byte(signal data : out std_logic; constant value : in bit_vector(7 downto 0)) is
+    begin
+        for i in value'range loop
+            write_bit(data, value(7 - i));
+        end loop;
+    end procedure;
 begin
     -- Instantiate DUT
     dut: entity work.OneWireSlave
         port map (
             clk      => clk,
             data_in  => data_in,
-            data_out => data_out
+            data_out => data_out,
+            rd_data  => rd_data,
+            rd_valid => rd_valid,
+            rd_ready => rd_ready,
+            wr_data  => wr_data,
+            wr_valid => wr_valid
         );
 
     clk      <= not clk after 500 ns;
@@ -66,9 +90,7 @@ begin
     data_out <= 'H'; -- weak pullup
     data     <= data_in and data_out;
 
-    -- Generate the test stimulus
-
-    test: process
+    generate_stimulus: process
     begin
         wait for 20 us;
         -- reset pulse  tRSTL (480us to 640us)
@@ -88,17 +110,19 @@ begin
         -- wait for tRSTH since we went high-impedance
         wait for (master_release_time + 480 us) - now;
 
-        -- Can start data communications now
-        write_bit(data_in, true);
-        read_bit(data_in, data_out, rx_value);
-        read_bit(data_in, data_out, rx_value);
-        write_bit(data_in, false);
-        write_bit(data_in, true);
-        read_bit(data_in, data_out, rx_value);
-        write_bit(data_in, true);
-        read_bit(data_in, data_out, rx_value);
-        write_bit(data_in, false);
-        read_bit(data_in, data_out, rx_value);
+        -- Start data communications 
+        for i in stimulus'range loop
+            write_byte(data_in, stimulus(i));
+        end loop;
+    end process;
+
+    check: process
+    begin
+        for i in stimulus'range loop
+            wait until wr_valid and rising_edge(clk);
+            assert wr_data = stimulus(i) report "wr_data not correct after write" severity failure;
+            wait until not wr_valid;
+        end loop;
         -- Testing complete
         report "##### TESTBENCH COMPLETE #####";
         finish;
