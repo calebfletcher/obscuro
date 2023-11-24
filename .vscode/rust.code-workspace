@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "../firmware/microcontroller"
+		},
+		{
+			"path": "../software"
+		}
+	],
+	"settings": {}
+}
