@@ -1,20 +1,18 @@
 #![no_std]
 #![no_main]
 
-use core::panic::PanicInfo;
-
 use nb::block;
 
 use cortex_m_rt::entry;
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 use stm32f1xx_hal::{pac, prelude::*, timer::Timer};
-
-#[panic_handler]
-fn panic_handler(_: &PanicInfo) -> ! {
-    loop {}
-}
 
 #[entry]
 fn main() -> ! {
+    rtt_init_print!();
+    rprintln!("Starting sequence detector");
+
     // Get access to the core peripherals from the cortex-m crate
     let cp = cortex_m::Peripherals::take().unwrap();
     // Get access to the device specific peripherals from the peripheral access crate
