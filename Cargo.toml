@@ -1,0 +1,3 @@
+[workspace]
+members = ["firmware/microcontroller/*", "software/*"]
+resolver = "2"
