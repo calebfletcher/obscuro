@@ -35,7 +35,10 @@ async fn main(_spawner: Spawner) {
     find_onewire_devices(&mut one_wire_bus, &mut delay);
 
     // Start sequence detect
-    ds28ea00::sequence_detect(&mut one_wire_bus, &mut delay).unwrap();
+    for addr in ds28ea00::sequence_detect(&mut one_wire_bus, &mut delay).unwrap() {
+        let addr = addr.unwrap();
+        info!("sequence: address {:#x}", addr.0);
+    }
 
     loop {
         Timer::after(Duration::from_secs(1)).await;
