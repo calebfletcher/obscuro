@@ -3,3 +3,10 @@ target = "thumbv7m-none-eabi"
 
 [target.thumbv7m-none-eabi]
 runner = 'probe-rs run --chip STM32F103C8'
+
+[env]
+DEFMT_LOG = "trace"
+
+[profile.release]
+# Allows defmt to display log locations even in release
+debug = true

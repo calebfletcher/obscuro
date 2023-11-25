@@ -1,47 +1,52 @@
 #![no_std]
 #![no_main]
+#![feature(type_alias_impl_trait)]
 
-use nb::block;
+use core::fmt::Debug;
+use defmt::info;
+use embassy_executor::Spawner;
+use embassy_stm32::gpio::{Level, Pull, Speed};
+use embassy_stm32::time::Hertz;
+use embassy_stm32::Config;
+use embassy_time::{Duration, Timer};
+use embedded_hal::delay::DelayUs;
+use embedded_hal::digital::{InputPin, OutputPin};
+use one_wire_bus::OneWire;
+use {defmt_rtt as _, panic_probe as _};
 
-use cortex_m_rt::entry;
-use panic_rtt_target as _;
-use rtt_target::{rprintln, rtt_init_print};
-use stm32f1xx_hal::{pac, prelude::*, timer::Timer};
+#[embassy_executor::main]
+async fn main(_spawner: Spawner) {
+    info!("Starting sequence detector");
 
-#[entry]
-fn main() -> ! {
-    rtt_init_print!();
-    rprintln!("Starting sequence detector");
+    // Init clocks
+    let mut config = Config::default();
+    config.rcc.hse = Some(Hertz(8_000_000));
+    config.rcc.sys_ck = Some(Hertz(64_000_000));
+    config.rcc.pclk1 = Some(Hertz(32_000_000));
+    let p = embassy_stm32::init(config);
 
-    // Get access to the core peripherals from the cortex-m crate
-    let cp = cortex_m::Peripherals::take().unwrap();
-    // Get access to the device specific peripherals from the peripheral access crate
-    let dp = pac::Peripherals::take().unwrap();
+    let one_wire_pin =
+        embassy_stm32::gpio::OutputOpenDrain::new(p.PA12, Level::High, Speed::VeryHigh, Pull::None);
+    find_devices(&mut embassy_time::Delay, one_wire_pin);
 
-    // Take ownership over the raw flash and rcc devices and convert them into the corresponding
-    // HAL structs
-    let mut flash = dp.FLASH.constrain();
-    let rcc = dp.RCC.constrain();
-
-    // Freeze the configuration of all the clocks in the system and store the frozen frequencies in
-    // `clocks`
-    let clocks = rcc.cfgr.freeze(&mut flash.acr);
-
-    // Acquire the GPIOC peripheral
-    let mut gpioa = dp.GPIOA.split();
-
-    // Configure gpio C pin 13 as a push-pull output. The `crh` register is passed to the function
-    // in order to configure the port. For pins 0-7, crl should be passed instead.
-    let mut led = gpioa.pa7.into_push_pull_output(&mut gpioa.crl);
-    // Configure the syst timer to trigger an update every second
-    let mut timer = Timer::syst(cp.SYST, &clocks).counter_hz();
-    timer.start(1.Hz()).unwrap();
-
-    // Wait for the timer to trigger an update and change the state of the LED
     loop {
-        block!(timer.wait()).unwrap();
-        led.set_high();
-        block!(timer.wait()).unwrap();
-        led.set_low();
+        Timer::after(Duration::from_secs(1)).await;
+    }
+}
+
+fn find_devices<P, E>(delay: &mut impl DelayUs, one_wire_pin: P)
+where
+    P: OutputPin<Error = E> + InputPin<Error = E>,
+    E: Debug,
+{
+    let mut one_wire_bus = OneWire::new(one_wire_pin).unwrap();
+
+    for device_address in one_wire_bus.devices(false, delay) {
+        let device_address = device_address.unwrap();
+        info!(
+            "Found device at address {:#x} with family code: {:#x}",
+            device_address.0,
+            device_address.family_code()
+        );
     }
 }
