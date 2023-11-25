@@ -10,6 +10,8 @@ pub const FAMILY_CODE: u8 = 0x42;
 
 pub const CMD_CHAIN: u8 = 0x99;
 pub const CMD_COND_READ_ROM: u8 = 0x0F;
+pub const CMD_PIO_READ: u8 = 0xF5;
+pub const CMD_PIO_WRITE: u8 = 0xA5;
 
 pub const CHAIN_OFF: u8 = 0x3C;
 pub const CHAIN_ON: u8 = 0x5A;
@@ -32,22 +34,23 @@ impl Ds28ea00 {
         &self.address
     }
 
-    // pub fn start_temp_measurement<T, E>(
-    //     &self,
-    //     onewire: &mut OneWire<T>,
-    //     delay: &mut impl DelayUs,
-    // ) -> Result<(), OneWireError<E>>
-    // where
-    //     T: InputPin<Error = E>,
-    //     T: OutputPin<Error = E>,
-    // {
-    //     onewire.send_command(
-    //         one_wire_bus::commands::SEARCH_ALARM,
-    //         Some(&self.address),
-    //         delay,
-    //     )?;
-    //     Ok(())
-    // }
+    pub fn pio_write<T, E>(
+        &self,
+        onewire: &mut OneWire<T>,
+        delay: &mut impl DelayUs,
+        pioa: embedded_hal::digital::PinState,
+        piob: embedded_hal::digital::PinState,
+    ) -> Result<(), OneWireError<E>>
+    where
+        T: InputPin<Error = E>,
+        T: OutputPin<Error = E>,
+    {
+        let value = 0b1111_1100 | (bool::from(piob) as u8) << 1 | bool::from(pioa) as u8;
+        onewire.send_command(CMD_PIO_WRITE, Some(&self.address), delay)?;
+        onewire.write_bytes(&[value, !value], delay)?;
+        onewire.read_byte(delay)?;
+        Ok(())
+    }
 }
 
 pub fn sequence_detect<'a, T, E, D: DelayUs>(

@@ -4,6 +4,7 @@
 
 use core::fmt::Debug;
 use defmt::info;
+use ds28ea00::Ds28ea00;
 use embassy_executor::Spawner;
 use embassy_stm32::gpio::{Level, Pull, Speed};
 use embassy_stm32::time::Hertz;
@@ -28,17 +29,23 @@ async fn main(_spawner: Spawner) {
     let mut delay = embassy_time::Delay;
 
     // Initialise one-wire bus
-    let one_wire_pin =
+    let one_wire_pin: embassy_stm32::gpio::OutputOpenDrain<'_, embassy_stm32::peripherals::PA12> =
         embassy_stm32::gpio::OutputOpenDrain::new(p.PA12, Level::High, Speed::VeryHigh, Pull::None);
     let mut one_wire_bus = OneWire::new(one_wire_pin).unwrap();
 
-    find_onewire_devices(&mut one_wire_bus, &mut delay);
+    //find_onewire_devices(&mut one_wire_bus, &mut delay);
 
     // Start sequence detect
-    for addr in ds28ea00::sequence_detect(&mut one_wire_bus, &mut delay).unwrap() {
+    let mut devices: [_; 8] = core::array::from_fn(|_| None);
+    for (i, addr) in ds28ea00::sequence_detect(&mut one_wire_bus, &mut delay)
+        .unwrap()
+        .enumerate()
+    {
         let addr = addr.unwrap();
         info!("sequence: address {:#x}", addr.0);
+        devices[i] = Some(Ds28ea00::new::<core::convert::Infallible>(addr).unwrap());
     }
+    info!("finished bus enumeration");
 
     loop {
         Timer::after(Duration::from_secs(1)).await;
