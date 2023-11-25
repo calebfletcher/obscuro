@@ -1,0 +1,11 @@
+[package]
+name = "ds28ea00"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+one-wire-bus = { git = "https://github.com/daniel-larsen/one-wire-bus.git", version = "0.1.1" }
+embedded-hal = "1.0.0-rc.1"
+defmt = "0.3.5"

@@ -186,6 +186,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ds28ea00"
+version = "0.1.0"
+dependencies = [
+ "defmt",
+ "embedded-hal 1.0.0-rc.1",
+ "one-wire-bus",
+]
+
+[[package]]
 name = "embassy-embedded-hal"
 version = "0.1.0"
 source = "git+https://github.com/embassy-rs/embassy.git#738971938a392904612258eefd51c9f0e452b119"
@@ -641,6 +650,7 @@ dependencies = [
  "cortex-m-rt",
  "defmt",
  "defmt-rtt",
+ "ds28ea00",
  "embassy-executor",
  "embassy-futures",
  "embassy-stm32",

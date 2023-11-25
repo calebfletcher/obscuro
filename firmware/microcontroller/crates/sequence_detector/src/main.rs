@@ -25,23 +25,29 @@ async fn main(_spawner: Spawner) {
     config.rcc.pclk1 = Some(Hertz(32_000_000));
     let p = embassy_stm32::init(config);
 
+    let mut delay = embassy_time::Delay;
+
+    // Initialise one-wire bus
     let one_wire_pin =
         embassy_stm32::gpio::OutputOpenDrain::new(p.PA12, Level::High, Speed::VeryHigh, Pull::None);
-    find_devices(&mut embassy_time::Delay, one_wire_pin);
+    let mut one_wire_bus = OneWire::new(one_wire_pin).unwrap();
+
+    find_onewire_devices(&mut one_wire_bus, &mut delay);
+
+    // Start sequence detect
+    ds28ea00::sequence_detect(&mut one_wire_bus, &mut delay).unwrap();
 
     loop {
         Timer::after(Duration::from_secs(1)).await;
     }
 }
 
-fn find_devices<P, E>(delay: &mut impl DelayUs, one_wire_pin: P)
+fn find_onewire_devices<P, E>(bus: &mut OneWire<P>, delay: &mut impl DelayUs)
 where
     P: OutputPin<Error = E> + InputPin<Error = E>,
     E: Debug,
 {
-    let mut one_wire_bus = OneWire::new(one_wire_pin).unwrap();
-
-    for device_address in one_wire_bus.devices(false, delay) {
+    for device_address in bus.devices(false, delay) {
         let device_address = device_address.unwrap();
         info!(
             "Found device at address {:#x} with family code: {:#x}",

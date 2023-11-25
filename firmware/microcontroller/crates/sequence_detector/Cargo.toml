@@ -51,3 +51,4 @@ defmt-rtt = "0.4.0"
 
 # Peripherals and Drivers
 one-wire-bus = { git = "https://github.com/daniel-larsen/one-wire-bus.git", version = "0.1.1" }
+ds28ea00 = { version = "0.1.0", path = "../ds28ea00" }
