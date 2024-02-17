@@ -1,6 +1,6 @@
-[submodule "firmware/submodules/ruckus"]
-	path = firmware/fpga/submodules/ruckus
-	url = https://github.com/slaclab/ruckus.git
-[submodule "firmware/submodules/surf"]
-	path = firmware/fpga/submodules/surf
+[submodule "gateware/submodules/surf"]
+	path = gateware/submodules/surf
 	url = https://github.com/slaclab/surf.git
+[submodule "gateware/submodules/ruckus"]
+	path = gateware/submodules/ruckus
+	url = https://github.com/slaclab/ruckus.git
